@@ -1,18 +1,33 @@
-import { useState } from 'react'
-import { Play, Pause, SkipForward, Volume2, Users, Settings, Palette } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Play, Pause, SkipForward, Volume2, Users, Settings, Sun, Moon } from 'lucide-react'
 import { Button } from './components/ui/button'
 import { Card } from './components/ui/card'
 import { Input } from './components/ui/input'
 import { ScrollArea } from './components/ui/scroll-area'
-
 import { Badge } from './components/ui/badge'
 import ObjectDetection from './components/ObjectDetection';
 
+const DEFAULT_VIDEO_ID = 'e7Vg1hDqQ-0'; // King of the Hill S1E1
+
 function App() {
+  // Theme state
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') || 'dark';
+    }
+    return 'dark';
+  });
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  // Video state
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentVideo] = useState({
     title: 'King of the Hill - Season 1 Episode 1 - Pilot',
     duration: '22:30',
+    videoId: DEFAULT_VIDEO_ID,
     thumbnail: 'https://i.imgur.com/8XrOOXJ.jpg'
   })
   const [users] = useState(['PropaneMaster', 'DaleGribble420', 'HankHill', 'BoomhauerFan', 'LuanneP'])
@@ -29,22 +44,22 @@ function App() {
   ])
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-slate-900 text-white transition-colors duration-500">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-slate-900/60">
+      <header className="border-b border-slate-800 bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-slate-900/60 transition-colors duration-500">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-600 bg-clip-text text-transparent tracking-tight drop-shadow-sm">
                 King of the Hill Stream
               </h1>
-              <Badge variant="secondary" className="bg-orange-500/20 text-orange-400">
+              <Badge variant="secondary" className="bg-orange-500/20 text-orange-400 animate-pulse">
                 Live • {users.length} viewers
               </Badge>
             </div>
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="icon">
-                <Palette className="h-4 w-4" />
+              <Button variant="ghost" size="icon" aria-label="Toggle theme" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                {theme === 'dark' ? <Sun className="h-5 w-5 text-yellow-300 transition-transform duration-300 rotate-0" /> : <Moon className="h-5 w-5 text-blue-500 transition-transform duration-300 rotate-180" />}
               </Button>
               <Button variant="ghost" size="icon">
                 <Settings className="h-4 w-4" />
@@ -60,28 +75,30 @@ function App() {
           <div className="lg:col-span-3 space-y-6">
             <Card className="bg-slate-800 border-slate-700">
               <div className="aspect-video bg-black rounded-lg overflow-hidden relative group">
-                <img 
-                  src={currentVideo.thumbnail} 
-                  alt={currentVideo.title}
-                  className="w-full h-full object-cover"
+                <iframe
+                  className="w-full h-full rounded-lg border-0"
+                  src={`https://www.youtube.com/embed/${currentVideo.videoId}?autoplay=${isPlaying ? 1 : 0}&modestbranding=1&rel=0`}
+                  title={currentVideo.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
                 />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button
                     size="lg"
-                    className="bg-orange-500 hover:bg-orange-600 text-white rounded-full w-16 h-16"
+                    className="bg-orange-500 hover:bg-orange-600 text-white rounded-full w-16 h-16 shadow-xl shadow-orange-500/20"
                     onClick={() => setIsPlaying(!isPlaying)}
                   >
                     {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-1" />}
                   </Button>
                 </div>
                 <div className="absolute bottom-4 left-4 right-4">
-                  <div className="bg-black/80 rounded-lg p-3">
+                  <div className="bg-black/80 rounded-lg p-3 shadow-lg">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-white font-medium">{currentVideo.title}</span>
+                      <span className="text-white font-medium truncate max-w-[60vw]">{currentVideo.title}</span>
                       <span className="text-gray-300">{currentVideo.duration}</span>
                     </div>
                     <div className="mt-2 h-1 bg-gray-600 rounded-full">
-                      <div className="h-full w-1/3 bg-orange-500 rounded-full"></div>
+                      <div className="h-full w-1/3 bg-orange-500 rounded-full transition-all duration-500"></div>
                     </div>
                   </div>
                 </div>
